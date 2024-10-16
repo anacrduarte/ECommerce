@@ -30,18 +30,16 @@ namespace ApiECommerce.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> OrderDetails(int orderId)
         {
-            var requestDetails = await (from orderDetail in _context.OrderDetails
-                                        join request in _context.Orders on orderDetail.OrderId equals request.Id
-                                        join product in _context.Products on orderDetail.ProductId equals product.Id
-                                        where orderDetail.OrderId == orderId
-                                        select new
+            var requestDetails = await  _context.OrderDetails.AsNoTracking()
+                                        .Where(d => d.OrderId == orderId)
+                                        .Select(orderDetail => new
                                         {
                                             Id = orderDetail.Id,
                                             Quantity = orderDetail.Quantity,
                                             SubTotal = orderDetail.TotalValue,
-                                            ProductName = product.Name,
-                                            ProductImage = product.UrlImage,
-                                            ProductPRice = product.Price,
+                                            ProductName = orderDetail.Product!.Name,
+                                            ProductImage = orderDetail.Product.UrlImage,
+                                            ProductPRice = orderDetail.Product.Price,
                                         }).ToListAsync();
 
             //outra maneira de fazer o mesmo
@@ -60,7 +58,7 @@ namespace ApiECommerce.Controllers
         //})
         //.ToListAsync();
 
-            if (requestDetails == null || requestDetails.Count == 0)
+            if (!requestDetails.Any())
             {
                 return NotFound("Detalhes do pedido não encontrados.");
             }
@@ -76,14 +74,15 @@ namespace ApiECommerce.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> PedidosPorUsuario(int userId)
         {
-            var requests = await (from order in _context.Orders
-                                  where order.UserId == userId
-                                  orderby order.OrderDate descending
-                                  select new
+            var requests = await _context.Orders
+                                 .AsNoTracking()
+                                 .Where (d => d.UserId == userId)
+                                 .OrderByDescending( d=> d.OrderDate)
+                                 .Select (d => new
                                   {
-                                      Id = order.Id,
-                                      TotalValue = order.TotalValue,
-                                      OrderDate = order.OrderDate,
+                                      Id = d.Id,
+                                      TotalValue = d.TotalValue,
+                                      OrderDate = d.OrderDate,
                                   }).ToListAsync();
 
 

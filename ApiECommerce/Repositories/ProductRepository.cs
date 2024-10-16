@@ -15,6 +15,7 @@ namespace ApiECommerce.Repositories
         public async Task<IEnumerable<Product>> GetBestSellingProductsAsync()
         {
             return await _dbContext.Products
+                .AsNoTracking()
                         .Where(p => p.Popular)
                         .ToListAsync();
         }
@@ -22,13 +23,14 @@ namespace ApiECommerce.Repositories
         public async Task<IEnumerable<Product>> GetPopularProductsAsync()
         {
             return await _dbContext.Products
+                .AsNoTracking()
                        .Where(p => p.BestSeller)
                        .ToListAsync();
         }
 
         public async Task<Product> GetProductDetailsAsync(int id)
         {
-            var productDetail = await _dbContext.Products
+            var productDetail = await _dbContext.Products.AsNoTracking()
                                             .FirstOrDefaultAsync(p => p.Id == id);
 
             if (productDetail is null)
